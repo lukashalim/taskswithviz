@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { getAuthSiteOrigin } from "@/lib/auth/site-origin";
 import { createClient } from "@/lib/supabase/client";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -26,7 +27,7 @@ export function PasswordForm() {
           email,
           password,
           options: {
-            emailRedirectTo: `${origin}/auth/callback`,
+            emailRedirectTo: `${getAuthSiteOrigin()}/auth/callback`,
           },
         });
         if (error) throw error;

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { getAuthSiteOrigin } from "@/lib/auth/site-origin";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,8 +12,6 @@ export function MagicLinkForm() {
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
   const supabase = createClient();
-  const origin =
-    typeof window !== "undefined" ? window.location.origin : "";
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -21,7 +20,7 @@ export function MagicLinkForm() {
       const { error } = await supabase.auth.signInWithOtp({
         email,
         options: {
-          emailRedirectTo: `${origin}/auth/callback`,
+          emailRedirectTo: `${getAuthSiteOrigin()}/auth/callback`,
         },
       });
       if (error) throw error;
