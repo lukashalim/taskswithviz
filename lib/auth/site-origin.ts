@@ -5,7 +5,7 @@ function trimTrailingSlash(url: string): string {
 }
 
 /**
- * Origin used for Supabase emailRedirectTo (magic link, signup confirm).
+ * App origin for Supabase auth redirects (OAuth `redirectTo`, etc.).
  * Local dev uses the current browser origin; deployed builds use
  * NEXT_PUBLIC_SITE_URL when set, otherwise the production Vercel URL.
  */

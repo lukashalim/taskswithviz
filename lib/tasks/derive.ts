@@ -1,6 +1,20 @@
 import { differenceInCalendarDays, startOfDay } from "date-fns";
 import type { Task, TaskStatus, VisualStatus } from "./types";
 
+/**
+ * Work completion 0..1 for visuals. Complete tasks always read as 100%.
+ * Returns null when no estimate and not complete (inner ring hidden).
+ */
+export function effectiveWorkProgress(task: Task): number | null {
+  if (task.status === "complete") {
+    return 1;
+  }
+  if (task.percent_done == null) {
+    return null;
+  }
+  return Math.min(1, Math.max(0, task.percent_done / 100));
+}
+
 export type DaysRemainingTone = "success" | "warning" | "danger" | "muted";
 
 export interface DaysRemaining {

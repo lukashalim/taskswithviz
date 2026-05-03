@@ -47,6 +47,7 @@ interface TaskFormDialogProps {
     description: string | null;
     due_date: string | null;
     status: TaskStatus;
+    percent_done: number | null;
   }) => Promise<void>;
   loading?: boolean;
 }
@@ -72,6 +73,7 @@ export function TaskFormDialog({
       description: "",
       due_date: undefined,
       status: "not_started",
+      percent_done: null,
     },
   });
 
@@ -83,6 +85,7 @@ export function TaskFormDialog({
         description: task.description ?? "",
         due_date: task.due_date ? new Date(task.due_date) : null,
         status: task.status,
+        percent_done: task.percent_done ?? null,
       });
     } else {
       form.reset({
@@ -105,11 +108,14 @@ export function TaskFormDialog({
       description,
       due_date,
       status: values.status,
+      percent_done:
+        values.percent_done === undefined ? null : values.percent_done,
     });
   }
 
   const dueDate = useWatch({ control: form.control, name: "due_date" });
   const status = useWatch({ control: form.control, name: "status" });
+  const percentDone = useWatch({ control: form.control, name: "percent_done" });
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -207,6 +213,58 @@ export function TaskFormDialog({
                 ))}
               </SelectContent>
             </Select>
+          </div>
+          <div className="grid gap-2">
+            <div className="flex items-center justify-between gap-2">
+              <Label htmlFor="task-percent-done">% done (optional)</Label>
+              <Button
+                type="button"
+                variant="ghost"
+                size="xs"
+                className="h-6 shrink-0 px-2 text-xs"
+                onClick={() => form.setValue("percent_done", null)}
+              >
+                Clear
+              </Button>
+            </div>
+            <div className="flex items-center gap-3">
+              <input
+                id="task-percent-done"
+                type="range"
+                min={0}
+                max={100}
+                step={1}
+                disabled={percentDone == null}
+                value={percentDone ?? 0}
+                onChange={(e) =>
+                  form.setValue("percent_done", Number(e.target.value))
+                }
+                className="h-2 min-w-0 flex-1 cursor-pointer accent-violet-600 disabled:opacity-40"
+              />
+              <span className="w-10 shrink-0 text-right text-sm tabular-nums text-muted-foreground">
+                {percentDone == null ? "—" : `${percentDone}%`}
+              </span>
+            </div>
+            {percentDone == null ? (
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="w-full"
+                onClick={() => form.setValue("percent_done", 0)}
+              >
+                Set work estimate
+              </Button>
+            ) : null}
+            {form.formState.errors.percent_done ? (
+              <p className="text-xs text-destructive">
+                {form.formState.errors.percent_done.message}
+              </p>
+            ) : null}
+            <p className="text-xs text-muted-foreground">
+              Inner violet ring on cards compares this to time elapsed (outer
+              ring) from created → due.
+            </p>
           </div>
           <DialogFooter className="gap-2 sm:gap-0">
             <Button

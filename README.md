@@ -1,6 +1,6 @@
 # Task Tracker
 
-Next.js app with Supabase Auth (password + magic link), Postgres tasks with RLS, and Realtime updates. UI uses Tailwind CSS and shadcn/ui.
+Next.js app with Supabase Auth (Google sign-in), Postgres tasks with RLS, and Realtime updates. UI uses Tailwind CSS and shadcn/ui.
 
 ## Setup
 
@@ -14,9 +14,19 @@ Next.js app with Supabase Auth (password + magic link), Postgres tasks with RLS,
    - `http://localhost:3000/auth/callback` (dev)
    - Your production origin + `/auth/callback`
 
-3. Enable **Email** provider. Magic link uses `signInWithOtp`; password uses `signInWithPassword` / `signUp`.
+3. **Google sign-in**
 
-4. Database: the app expects a `public.tasks` table with RLS (created via Supabase MCP / SQL in this project). Realtime publication must include `public.tasks`.
+   - Supabase → **Authentication** → **Providers** → **Google**: enable and add OAuth **Client ID** and **Client secret** from [Google Cloud Console](https://console.cloud.google.com/apis/credentials).
+   - In the Google OAuth client, set **Authorized redirect URI** to:  
+     `https://<your-project-ref>.supabase.co/auth/v1/callback`  
+     (same host as `NEXT_PUBLIC_SUPABASE_URL`.)
+
+4. Database:
+
+   - `public.tasks` with RLS (see your existing setup). Realtime publication should include `public.tasks`. Optional column **`percent_done`** (0–100, nullable) is added by [`supabase/migrations/20260202140000_tasks_percent_done.sql`](supabase/migrations/20260202140000_tasks_percent_done.sql) for work-vs-time rings in the UI.
+   - **Progress updates:** apply [`supabase/migrations/20260202120000_task_updates.sql`](supabase/migrations/20260202120000_task_updates.sql) using either:
+     - **CLI:** add `DATABASE_URL` to `.env.local` (Supabase → **Project Settings** → **Database** → **Connection string** → URI; URL-encode characters in the password). Then run `npm run db:push`.
+     - **SQL Editor:** paste and run the migration file in the [SQL Editor](https://supabase.com/dashboard/project/_/sql/new) (replace `_` with your project ref). The migration adds `task_updates` to `supabase_realtime` when possible.
 
 ## Scripts
 
@@ -30,4 +40,5 @@ npm run lint
 
 - KPI cards: total tasks, percent complete, overdue count (overdue = past due date and not complete)
 - Task CRUD with grouped sections by visual status
+- **Task detail page** (`/dashboard/tasks/[id]`): full description, edit task, and an append-only **progress log** with realtime sync
 - Instant UI updates via Supabase Realtime `postgres_changes`

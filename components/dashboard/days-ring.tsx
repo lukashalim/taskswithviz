@@ -2,6 +2,7 @@
 
 import {
   computeDaysRemaining,
+  effectiveWorkProgress,
   type DaysRemaining,
 } from "@/lib/tasks/derive";
 import type { Task } from "@/lib/tasks/types";
@@ -12,10 +13,10 @@ interface DaysRingProps {
   reference: Date;
 }
 
-const SIZE = 44;
-const STROKE = 4;
-const R = (SIZE - STROKE) / 2;
-const C = 2 * Math.PI * R;
+const SIZE = 52;
+const STROKE_OUTER = 4;
+const STROKE_INNER = 3;
+const RING_GAP = 2;
 
 function ringText(info: DaysRemaining): {
   headline: string;
@@ -58,20 +59,57 @@ function toneClasses(tone: DaysRemaining["tone"]) {
   }
 }
 
+function formatAriaLabel(
+  timeFrac: number | null,
+  workFrac: number | null,
+  daysInfo: DaysRemaining,
+): string {
+  const parts: string[] = [];
+  if (daysInfo.label === "Done") {
+    parts.push("Task complete");
+  } else if (timeFrac != null) {
+    parts.push(`Time elapsed about ${Math.round(timeFrac * 100)} percent`);
+  } else {
+    parts.push("No schedule ring");
+  }
+  if (workFrac != null) {
+    parts.push(`work about ${Math.round(workFrac * 100)} percent done`);
+  }
+  parts.push(daysInfo.label);
+  return parts.join(", ");
+}
+
 export function DaysRing({ task, reference }: DaysRingProps) {
   const info = computeDaysRemaining(task, reference);
+  const workP = effectiveWorkProgress(task);
   const { headline, sub } = ringText(info);
-  const { stroke, text } = toneClasses(info.tone);
-  const dash = info.tone === "muted" ? `${C * 0.15} ${C * 0.1}` : undefined;
-  const offset = C * (1 - info.progress);
+  const { stroke: timeStroke, text } = toneClasses(info.tone);
+
+  const cx = SIZE / 2;
+  const cy = SIZE / 2;
+  const rOuter = (SIZE - STROKE_OUTER) / 2;
+  const rInner = rOuter - STROKE_OUTER / 2 - RING_GAP - STROKE_INNER / 2;
+
+  const cOuter = 2 * Math.PI * rOuter;
+  const cInner = 2 * Math.PI * rInner;
+
+  const timeProgress = info.tone === "muted" ? null : info.progress;
+  const outerDash = info.tone === "muted" ? `${cOuter * 0.15} ${cOuter * 0.1}` : undefined;
+  const outerOffset =
+    timeProgress != null ? cOuter * (1 - timeProgress) : cOuter;
+
+  const innerOffset =
+    workP != null ? cInner * (1 - workP) : cInner;
+
+  const ariaLabel = formatAriaLabel(timeProgress, workP, info);
 
   return (
     <div
       className="relative shrink-0"
       style={{ width: SIZE, height: SIZE }}
-      title={info.label}
       role="img"
-      aria-label={info.label}
+      aria-label={ariaLabel}
+      title="Outer ring: time from created → due. Inner violet: % done."
     >
       <svg
         width={SIZE}
@@ -81,25 +119,50 @@ export function DaysRing({ task, reference }: DaysRingProps) {
         aria-hidden
       >
         <circle
-          cx={SIZE / 2}
-          cy={SIZE / 2}
-          r={R}
+          cx={cx}
+          cy={cy}
+          r={rOuter}
           fill="none"
-          strokeWidth={STROKE}
+          strokeWidth={STROKE_OUTER}
           className="stroke-muted-foreground/25"
-          strokeDasharray={dash}
+          strokeDasharray={outerDash}
         />
-        {info.tone !== "muted" ? (
+        {timeProgress != null ? (
           <circle
-            cx={SIZE / 2}
-            cy={SIZE / 2}
-            r={R}
+            cx={cx}
+            cy={cy}
+            r={rOuter}
             fill="none"
-            strokeWidth={STROKE}
+            strokeWidth={STROKE_OUTER}
             strokeLinecap="round"
-            className={cn("transition-[stroke-dashoffset] duration-300", stroke)}
-            strokeDasharray={C}
-            strokeDashoffset={offset}
+            className={cn(
+              "transition-[stroke-dashoffset] duration-300",
+              timeStroke,
+            )}
+            strokeDasharray={cOuter}
+            strokeDashoffset={outerOffset}
+          />
+        ) : null}
+
+        <circle
+          cx={cx}
+          cy={cy}
+          r={rInner}
+          fill="none"
+          strokeWidth={STROKE_INNER}
+          className="stroke-muted-foreground/20"
+        />
+        {workP != null ? (
+          <circle
+            cx={cx}
+            cy={cy}
+            r={rInner}
+            fill="none"
+            strokeWidth={STROKE_INNER}
+            strokeLinecap="round"
+            className="stroke-violet-500 transition-[stroke-dashoffset] duration-300 dark:stroke-violet-400"
+            strokeDasharray={cInner}
+            strokeDashoffset={innerOffset}
           />
         ) : null}
       </svg>
@@ -118,7 +181,7 @@ export function DaysRing({ task, reference }: DaysRingProps) {
           {headline}
         </span>
         {sub ? (
-          <span className="mt-0.5 max-w-[36px] text-[6px] font-medium leading-tight opacity-90">
+          <span className="mt-0.5 max-w-[40px] text-[6px] font-medium leading-tight opacity-90">
             {sub}
           </span>
         ) : null}

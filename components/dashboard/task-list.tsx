@@ -19,6 +19,8 @@ interface TaskListProps {
   reference: Date;
   onEdit: (task: Task) => void;
   onDelete: (task: Task) => void;
+  activeSessionTaskId?: string | null;
+  onStartWorkSession?: (task: Task) => void;
 }
 
 export function TaskList({
@@ -26,6 +28,8 @@ export function TaskList({
   reference,
   onEdit,
   onDelete,
+  activeSessionTaskId = null,
+  onStartWorkSession,
 }: TaskListProps) {
   const grouped = groupTasksByVisualStatus(tasks, reference);
 
@@ -64,6 +68,8 @@ export function TaskList({
                   reference={reference}
                   onEdit={onEdit}
                   onDelete={onDelete}
+                  activeSessionTaskId={activeSessionTaskId}
+                  onStartWorkSession={onStartWorkSession}
                 />
               ))}
             </div>

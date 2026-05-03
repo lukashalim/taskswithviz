@@ -1,7 +1,7 @@
 import Link from "next/link";
+import { GoogleSignInButton } from "@/components/auth/google-sign-in-button";
 import { LoginAuthError } from "@/components/auth/login-auth-error";
 import { LoginAuthRedirect } from "@/components/auth/login-auth-redirect";
-import { LoginTabs } from "@/components/auth/login-tabs";
 import {
   Card,
   CardContent,
@@ -10,25 +10,14 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 
-export default function LoginPage() {
-  // #region agent log
-  fetch("http://127.0.0.1:7476/ingest/988fe597-edd2-4036-9c3f-9f7d76d5ff11", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "X-Debug-Session-Id": "15c600",
-    },
-    body: JSON.stringify({
-      sessionId: "15c600",
-      location: "app/login/page.tsx",
-      message: "login_page_render_start",
-      data: {},
-      timestamp: Date.now(),
-      hypothesisId: "H1",
-      runId: "post-fix",
-    }),
-  }).catch(() => {});
-  // #endregion
+export default async function LoginPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ error?: string }>;
+}) {
+  const params = await searchParams;
+  const authFailed = params.error === "auth";
+
   return (
     <div
       className="flex min-h-screen flex-col items-center justify-center bg-muted/40 p-4"
@@ -54,12 +43,12 @@ export default function LoginPage() {
         <CardHeader>
           <CardTitle>Welcome</CardTitle>
           <CardDescription>
-            Sign in with a password or use a magic link.
+            Sign in with your Google account to continue.
           </CardDescription>
-          <LoginAuthError />
+          <LoginAuthError show={authFailed} />
         </CardHeader>
         <CardContent>
-          <LoginTabs />
+          <GoogleSignInButton />
         </CardContent>
       </Card>
     </div>

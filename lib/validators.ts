@@ -15,6 +15,25 @@ export const taskFormSchema = z.object({
   description: z.string().optional(),
   due_date: z.date().nullable().optional(),
   status: taskStatusSchema,
+  percent_done: z
+    .number()
+    .int()
+    .min(0)
+    .max(100)
+    .nullable()
+    .optional(),
 });
 
 export type TaskFormValues = z.infer<typeof taskFormSchema>;
+
+export const taskProgressUpdateBodySchema = z.object({
+  body: z
+    .string()
+    .trim()
+    .min(1, "Write a short update")
+    .max(4000, "Update is too long"),
+});
+
+export type TaskProgressUpdateFormValues = z.infer<
+  typeof taskProgressUpdateBodySchema
+>;
