@@ -37,3 +37,10 @@ export const taskProgressUpdateBodySchema = z.object({
 export type TaskProgressUpdateFormValues = z.infer<
   typeof taskProgressUpdateBodySchema
 >;
+
+export const taskEmailSendBodySchema = z.object({
+  to: z.string().trim().email("Enter a valid email address"),
+  message: z.string().trim().max(4000, "Message is too long").optional(),
+});
+
+export type TaskEmailSendBody = z.infer<typeof taskEmailSendBodySchema>;

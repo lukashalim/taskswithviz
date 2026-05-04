@@ -2,7 +2,7 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { format } from "date-fns";
-import { ArrowLeft, Pencil, Square, Timer } from "lucide-react";
+import { ArrowLeft, Mail, Pencil, Square, Timer } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -39,6 +39,7 @@ import {
 } from "@/lib/validators";
 import { DaysRing } from "./days-ring";
 import { StatusBadge } from "./status-badge";
+import { TaskEmailDialog } from "./task-email-dialog";
 import { TaskFormDialog } from "./task-form-dialog";
 
 function mergeUpdate(
@@ -101,6 +102,7 @@ export function TaskDetailClient({
   const [tick, setTick] = useState(() => new Date());
   const [sessionStopping, setSessionStopping] = useState(false);
   const [sessionStarting, setSessionStarting] = useState(false);
+  const [emailDialogOpen, setEmailDialogOpen] = useState(false);
 
   const supabase = useMemo(() => createClient(), []);
   const visual = deriveVisualStatus(task, now);
@@ -332,8 +334,20 @@ export function TaskDetailClient({
               <p className="text-sm text-muted-foreground">No due date</p>
             )}
           </div>
-          <div className="flex shrink-0 items-center gap-3">
+          <div className="flex shrink-0 flex-wrap items-center gap-2 sm:gap-3">
             <DaysRing task={task} reference={now} />
+            {progressLogEnabled ? (
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="gap-2"
+                onClick={() => setEmailDialogOpen(true)}
+              >
+                <Mail className="size-4" />
+                Email task
+              </Button>
+            ) : null}
             <Button
               type="button"
               variant="outline"
@@ -630,6 +644,14 @@ export function TaskDetailClient({
         onSubmit={handleEditSubmit}
         loading={editLoading}
       />
+
+      {progressLogEnabled ? (
+        <TaskEmailDialog
+          open={emailDialogOpen}
+          onOpenChange={setEmailDialogOpen}
+          taskId={task.id}
+        />
+      ) : null}
     </div>
   );
 }
