@@ -12,8 +12,6 @@ import {
   fetchOpenWorkSessionForUser,
   isWorkSessionsTableUnavailableError,
 } from "@/lib/tasks/work-sessions";
-import { getRandomTaskInspiration } from "@/lib/task-inspiration";
-
 const AUTH_TIMEOUT_MS = 8_000;
 
 async function getSessionUser(
@@ -105,8 +103,6 @@ export default async function TaskDetailPage({
     }
   }
 
-  const inspiration = getRandomTaskInspiration();
-
   return (
     <TaskDetailClient
       initialTask={task}
@@ -116,7 +112,6 @@ export default async function TaskDetailPage({
       initialOpenSession={initialOpenSession}
       initialCompletedSessions={initialCompletedSessions}
       workSessionsEnabled={workSessionsEnabled}
-      inspiration={inspiration}
     />
   );
 }

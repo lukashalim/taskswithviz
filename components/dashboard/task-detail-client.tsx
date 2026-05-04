@@ -2,7 +2,7 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { format } from "date-fns";
-import { ArrowLeft, BookOpen, Pencil, Square, Timer } from "lucide-react";
+import { ArrowLeft, Pencil, Square, Timer } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -32,7 +32,6 @@ import {
   endWorkSession,
   startWorkSession,
 } from "@/lib/tasks/work-sessions";
-import type { TaskInspiration } from "@/lib/task-inspiration";
 import { cn } from "@/lib/utils";
 import {
   taskProgressUpdateBodySchema,
@@ -63,7 +62,6 @@ interface TaskDetailClientProps {
   initialCompletedSessions: TaskWorkSession[];
   /** False when `public.task_work_sessions` is missing (migration). */
   workSessionsEnabled?: boolean;
-  inspiration: TaskInspiration;
 }
 
 function mergeCompletedSession(
@@ -87,7 +85,6 @@ export function TaskDetailClient({
   initialOpenSession,
   initialCompletedSessions,
   workSessionsEnabled = true,
-  inspiration,
 }: TaskDetailClientProps) {
   const router = useRouter();
   const [task, setTask] = useState(initialTask);
@@ -359,29 +356,6 @@ export function TaskDetailClient({
             No description
           </p>
         )}
-
-        <aside
-          className="mt-6 rounded-xl border border-border/80 bg-muted/20 px-4 py-4 sm:px-5"
-          aria-label="Reflection for this visit"
-        >
-          <div className="flex gap-3">
-            <BookOpen
-              className="mt-0.5 size-4 shrink-0 text-muted-foreground"
-              aria-hidden
-            />
-            <div className="min-w-0 space-y-2">
-              {inspiration.context ? (
-                <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                  {inspiration.context}
-                </p>
-              ) : null}
-              <blockquote className="text-sm leading-relaxed text-foreground">
-                {inspiration.body}
-              </blockquote>
-              <p className="text-xs text-muted-foreground">— {inspiration.author}</p>
-            </div>
-          </div>
-        </aside>
       </div>
 
       {workSessionsEnabled && sessionElsewhere && openSession ? (
