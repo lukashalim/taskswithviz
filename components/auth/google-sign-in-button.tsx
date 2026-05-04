@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { getAuthSiteOrigin } from "@/lib/auth/site-origin";
 import { authErrorMessage } from "@/lib/auth/user-facing-error";
 import { createClient } from "@/lib/supabase/client";
@@ -39,16 +39,118 @@ export function GoogleSignInButton() {
   const [loading, setLoading] = useState(false);
   const supabase = createClient();
 
+  useEffect(() => {
+    const siteOrigin = getAuthSiteOrigin();
+    // #region agent log
+    fetch(
+      "http://127.0.0.1:7476/ingest/988fe597-edd2-4036-9c3f-9f7d76d5ff11",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-Debug-Session-Id": "d286e2",
+        },
+        body: JSON.stringify({
+          sessionId: "d286e2",
+          location: "google-sign-in-button.tsx:mount",
+          message: "login_google_button_mounted",
+          data: {
+            hostname: window.location.hostname,
+            windowOrigin: window.location.origin,
+            siteOrigin,
+            envSiteUrlLen: (process.env.NEXT_PUBLIC_SITE_URL ?? "").length,
+          },
+          timestamp: Date.now(),
+          hypothesisId: "H4",
+          runId: "pre-fix",
+        }),
+      },
+    ).catch(() => {});
+    // #endregion
+  }, []);
+
   async function onClick() {
     setLoading(true);
     try {
+      const siteOrigin = getAuthSiteOrigin();
+      const redirectTo = `${siteOrigin}/auth/callback`;
+      // #region agent log
+      fetch(
+        "http://127.0.0.1:7476/ingest/988fe597-edd2-4036-9c3f-9f7d76d5ff11",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "X-Debug-Session-Id": "d286e2",
+          },
+          body: JSON.stringify({
+            sessionId: "d286e2",
+            location: "google-sign-in-button.tsx:onClick",
+            message: "oauth_before_signInWithOAuth",
+            data: {
+              hostname: window.location.hostname,
+              windowOrigin: window.location.origin,
+              siteOrigin,
+              redirectTo,
+              envSiteUrlLen: (process.env.NEXT_PUBLIC_SITE_URL ?? "").length,
+              envSiteUrlIsLocalhost: (
+                process.env.NEXT_PUBLIC_SITE_URL ?? ""
+              ).includes("localhost"),
+            },
+            timestamp: Date.now(),
+            hypothesisId: "H1-H2-H4",
+            runId: "pre-fix",
+          }),
+        },
+      ).catch(() => {});
+      // #endregion
+
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: "google",
         options: {
-          redirectTo: `${getAuthSiteOrigin()}/auth/callback`,
+          redirectTo,
         },
       });
       if (error) throw error;
+
+      // #region agent log
+      let redirectToInAuthUrl: string | null = null;
+      let authUrlHost = "";
+      try {
+        if (data.url) {
+          const u = new URL(data.url);
+          authUrlHost = u.host;
+          redirectToInAuthUrl = u.searchParams.get("redirect_to");
+        }
+      } catch {
+        redirectToInAuthUrl = "parse_error";
+      }
+      fetch(
+        "http://127.0.0.1:7476/ingest/988fe597-edd2-4036-9c3f-9f7d76d5ff11",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "X-Debug-Session-Id": "d286e2",
+          },
+          body: JSON.stringify({
+            sessionId: "d286e2",
+            location: "google-sign-in-button.tsx:afterOAuthUrl",
+            message: "oauth_supabase_authorize_url_parsed",
+            data: {
+              authUrlHost,
+              redirectToInAuthUrl,
+              redirectToInAuthUrlHasLocalhost:
+                (redirectToInAuthUrl ?? "").includes("localhost"),
+            },
+            timestamp: Date.now(),
+            hypothesisId: "H3-H5",
+            runId: "pre-fix",
+          }),
+        },
+      ).catch(() => {});
+      // #endregion
+
       if (data.url) {
         window.location.href = data.url;
       }
