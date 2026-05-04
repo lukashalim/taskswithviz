@@ -49,7 +49,7 @@ function mergeUpdate(
   if (prev.some((u) => u.id === row.id)) return prev;
   return [...prev, row].sort(
     (a, b) =>
-      new Date(a.created_at).getTime() - new Date(b.created_at).getTime(),
+      new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
   );
 }
 
@@ -540,7 +540,7 @@ export function TaskDetailClient({
           <CardTitle className="text-lg">Progress updates</CardTitle>
           <p className="text-sm text-muted-foreground">
             {progressLogEnabled
-              ? "Add notes as you work. Newest entries appear at the bottom."
+              ? "Add notes as you work. Newest entries appear first."
               : "Enable the database table below to use the progress log."}
           </p>
         </CardHeader>
@@ -579,8 +579,30 @@ export function TaskDetailClient({
             </div>
           ) : null}
 
+          {!progressLogEnabled ? null : updates.length === 0 ? (
+            <p className="rounded-lg border border-dashed bg-muted/30 px-4 py-8 text-center text-sm text-muted-foreground">
+              No updates yet. Add a note below to build a history for this task.
+            </p>
+          ) : (
+            <ul className="space-y-4">
+              {updates.map((u) => (
+                <li
+                  key={u.id}
+                  className="rounded-lg border border-border/80 bg-card/50 px-4 py-3"
+                >
+                  <p className="whitespace-pre-wrap text-sm leading-relaxed">
+                    {u.body}
+                  </p>
+                  <p className="mt-2 text-xs text-muted-foreground tabular-nums">
+                    {format(new Date(u.created_at), "PPp")}
+                  </p>
+                </li>
+              ))}
+            </ul>
+          )}
+
           <form
-            className="space-y-3"
+            className="space-y-3 border-t border-border pt-6"
             onSubmit={progressForm.handleSubmit(onProgressSubmit)}
           >
             <div className="space-y-2">
@@ -610,29 +632,6 @@ export function TaskDetailClient({
                 : "Add update"}
             </Button>
           </form>
-
-          {!progressLogEnabled ? null : updates.length === 0 ? (
-            <p className="rounded-lg border border-dashed bg-muted/30 px-4 py-8 text-center text-sm text-muted-foreground">
-              No updates yet. Log progress above to build a history for this
-              task.
-            </p>
-          ) : (
-            <ul className="space-y-4 border-t border-border pt-6">
-              {updates.map((u) => (
-                <li
-                  key={u.id}
-                  className="rounded-lg border border-border/80 bg-card/50 px-4 py-3"
-                >
-                  <p className="whitespace-pre-wrap text-sm leading-relaxed">
-                    {u.body}
-                  </p>
-                  <p className="mt-2 text-xs text-muted-foreground tabular-nums">
-                    {format(new Date(u.created_at), "PPp")}
-                  </p>
-                </li>
-              ))}
-            </ul>
-          )}
         </CardContent>
       </Card>
 

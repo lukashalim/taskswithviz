@@ -87,7 +87,7 @@ export async function fetchTaskProgressUpdates(
     .from("task_updates")
     .select("*")
     .eq("task_id", taskId)
-    .order("created_at", { ascending: true });
+    .order("created_at", { ascending: false });
 
   if (error) throw error;
   return (data ?? []) as TaskProgressUpdate[];
