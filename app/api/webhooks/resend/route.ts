@@ -4,6 +4,7 @@ import {
   getResend,
   parseTaskIdFromRecipient,
   plainTextFromInbound,
+  stripQuotedReplyFromPlainText,
 } from "@/lib/email/resend-client";
 import { createAdminClient } from "@/lib/supabase/admin";
 
@@ -97,10 +98,11 @@ export async function POST(request: Request) {
     );
   }
 
-  const textBody = plainTextFromInbound({
+  const rawBody = plainTextFromInbound({
     text: received.text,
     html: received.html,
   });
+  const textBody = stripQuotedReplyFromPlainText(rawBody);
   if (!textBody) {
     return NextResponse.json({ ok: true, skipped: "empty_body" });
   }

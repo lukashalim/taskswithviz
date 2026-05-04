@@ -163,3 +163,51 @@ export function plainTextFromInbound(params: {
     .replace(/\s+/g, " ")
     .trim();
 }
+
+/** Lines that mark the start of a quoted thread (Gmail, Apple Mail, Outlook, etc.). */
+const PLAIN_QUOTE_HEADER_LINE: RegExp[] = [
+  // Gmail / Apple Mail (English): "On Mon, May 4, 2026 at 3:19 PM <x> wrote:"
+  /^On .*\d{4}.*wrote:\s*$/i,
+  /^Am .+ schrieb .+:\s*$/i,
+  /^Le .+ a écrit\s?:\s*$/i,
+  /^Il giorno .+ ha scritto:\s*$/i,
+  /^-{2,}\s*Original Message\s*-{2,}\s*$/i,
+  /^_{20,}\s*$/,
+];
+
+/**
+ * Keep only the new reply at the top; drop client-appended quoted threads.
+ */
+export function stripQuotedReplyFromPlainText(text: string): string {
+  const normalized = text.replace(/\r\n/g, "\n").replace(/\r/g, "\n").trimEnd();
+  if (!normalized) return "";
+
+  const lines = normalized.split("\n");
+  let cutAt = lines.length;
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i].trimEnd();
+    if (PLAIN_QUOTE_HEADER_LINE.some((re) => re.test(line))) {
+      cutAt = i;
+      break;
+    }
+  }
+
+  if (cutAt === lines.length) {
+    for (let i = 0; i < lines.length; i++) {
+      const t = lines[i].trim();
+      if (!t.startsWith(">")) continue;
+      const rest = lines.slice(i);
+      const nonEmpty = rest.map((l) => l.trim()).filter(Boolean);
+      if (
+        nonEmpty.length > 0 &&
+        nonEmpty.every((l) => l.startsWith(">"))
+      ) {
+        cutAt = i;
+        break;
+      }
+    }
+  }
+
+  return lines.slice(0, cutAt).join("\n").trim();
+}
